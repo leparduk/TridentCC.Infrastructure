@@ -5,11 +5,11 @@ function Write-LibVar {
         Write a Variable to a Group in a Projects.
     .DESCRIPTION
         Write a Variable to a Group in a Projects.
-    .PARAMETER projectTo
+    .PARAMETER projectToName
         The Name of the Project to write to
     .PARAMETER groupToName
         The name of the Library to write to
-    .PARAMETER varTo
+    .PARAMETER varToName
         The name of the key to write to
     .PARAMETER value
         The value
@@ -18,7 +18,7 @@ function Write-LibVar {
      .PARAMETER Demo
         Replace this with WhatIf Functionality
     .EXAMPLE
-        write-LibVar -ProjectTo "" -groupToName "" -varTo "" -value ""
+        write-LibVar -ProjectToName "" -groupToName "" -varToName "" -value ""
     .NOTES
         There should be notes.
     .LINK
@@ -28,11 +28,11 @@ function Write-LibVar {
     [OutputType([System.String])]
     param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [string] $projectTo,
+        [string] $projectToName,
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [string] $groupToName,
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [string] $varTo,
+        [string] $varToName,
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [string] $value,
         [bool]   $IsSecret,
@@ -62,22 +62,22 @@ function Write-LibVar {
         [Console]::ResetColor()
 
         # Create If Not Exists?
-        $groupTo = (az pipelines variable-group list --group-name $groupToName --org $org --project $projectTo -o json) | ConvertFrom-Json
+        $groupTo = (az pipelines variable-group list --group-name $groupToName --org $org --project $projectToName -o json) | ConvertFrom-Json
         [Console]::ResetColor()
 
         if ([string]::IsNullOrEmpty($groupTo)) {
             Write-Information "Creating Group - $groupToName"
             if (-not $Demo) {
                 $timestamp = (Get-Date).ToString("yyyy_MM_dd HH_mm")
-                az pipelines variable-group create --name $groupToName --org $org --project $projectTo --variables Created=$timestamp -o json
-                $groupTo = (az pipelines variable-group list --group-name $groupToName --org $org --project $projectTo -o json) | ConvertFrom-Json
+                az pipelines variable-group create --name $groupToName --org $org --project $projectToName --variables Created=$timestamp -o json
+                $groupTo = (az pipelines variable-group list --group-name $groupToName --org $org --project $projectToName -o json) | ConvertFrom-Json
                 [Console]::ResetColor()
             } # end if
         } # end if
 
         $groupToId = $groupTo.id
 
-        $varsTo = (az pipelines variable-group variable list --group-id $groupToId --org $org --project $projectTo -o json) | ConvertFrom-Json | Get-ObjectMember
+        $varsTo = (az pipelines variable-group variable list --group-id $groupToId --org $org --project $projectToName -o json) | ConvertFrom-Json | Get-ObjectMember
         [Console]::ResetColor()
 
         $found = $false
@@ -90,14 +90,14 @@ function Write-LibVar {
             $key = $var.Key
             $current = '"{0}"' -f $var.Value
 
-            if ($key -eq $varTo) {
+            if ($key -eq $varToName) {
 
                 #Write-Information $current
                 #Write-Information $value
 
                 # values from devops libs come back as quoted strings so we wrap the input as "value" for the comparison
                 if ($current -ne """$($value)""") {
-                    az pipelines variable-group variable update --group-id $groupToId --org $org --project $projectTo --name $varTo --value $value
+                    az pipelines variable-group variable update --group-id $groupToId --org $org --project $projectToName --name $varToName --value $value
                 }
 
                 $found = $true
@@ -111,7 +111,7 @@ function Write-LibVar {
             if ($IsSecret) {
 
                 Write-Information "Create SECRET - varTo $key does not exist"
-                az pipelines variable-group variable create --group-id $groupToId --org $org --project $projectTo --name $varTo --value $value --secret true
+                az pipelines variable-group variable create --group-id $groupToId --org $org --project $projectToName --name $varToName --value $value --secret true
 
                 [Console]::ResetColor()
 
@@ -119,7 +119,7 @@ function Write-LibVar {
             else {
 
                 Write-Information "Create - varTo $key does not exist"
-                az pipelines variable-group variable create --group-id $groupToId --org $org --project $projectTo --name $varTo --value $value
+                az pipelines variable-group variable create --group-id $groupToId --org $org --project $projectToName --name $varToName --value $value
 
                 [Console]::ResetColor()
             } # end if

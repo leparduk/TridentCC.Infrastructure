@@ -1,5 +1,5 @@
 TOPIC
-    about_Tridentcc.Common
+    about_Tridentcc.Azure
 
 SHORT DESCRIPTION
     Common set of tools.

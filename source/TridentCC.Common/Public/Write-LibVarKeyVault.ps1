@@ -7,16 +7,16 @@ function Write-LibVarKeyVault {
 
         The key name in the Key Vault is the Project--Group--Key used in the library. dots and underscores are replaced with dashes.
         The inputs to this cmdlet match the inputs to write-LibVar
-    .PARAMETER projectTo
+    .PARAMETER projectToName
         The Name of the Project to write to - forms part of the secret key
     .PARAMETER groupToName
         The name of the Library to write to - forms part of the secret key
-    .PARAMETER varTo
+    .PARAMETER varToName
         The name of the key to write to - forms part of the secret key
     .PARAMETER value
         The value
     .EXAMPLE
-        write-LibVarKeyVault -ProjectTo "" -groupToName "" -varTo "" -value ""
+        write-LibVarKeyVault -ProjectToName "" -groupToName "" -varToName "" -value ""
     .NOTES
         There should be notes.
     .LINK
@@ -26,11 +26,11 @@ function Write-LibVarKeyVault {
     [OutputType([System.String])]
     param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [string] $projectTo,
+        [string] $projectToName,
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [string] $groupToName,
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [string] $varTo,
+        [string] $varToName,
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [string] $value
     )
@@ -44,7 +44,7 @@ function Write-LibVarKeyVault {
         $vaultName = "tcc-uks-infra-common-kv"
         $subscription = "12345678-abcd-efgh-ijkl-1234abcd5678"
 
-        $name = "$($projectTo)--$($groupToName)--$($varTo)"
+        $name = "$($projectToName)--$($groupToName)--$($varToName)"
         $name = $name.Replace('.', '-') # secret names can only contain alpahnumeric and dashes
         $name = $name.Replace('_', '-')
         $name

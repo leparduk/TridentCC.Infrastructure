@@ -4,14 +4,14 @@ function Read-LibVarKeyVault {
         Read a Variable from a Group in a Project.
     .DESCRIPTION
         Read a Variable from a Group in a Project.
-    .PARAMETER projectFrom
+    .PARAMETER projectFromName
         The Name of the Project to read from
     .PARAMETER groupFromName
         The name of the Library to read from
-    .PARAMETER varFrom
+    .PARAMETER varFromName
         The name of the key to read from
     .EXAMPLE
-        Read-LibVarKeyVault -ProjectFrom "" -groupFromName "" -varFrom ""
+        Read-LibVarKeyVault -ProjectFromName "" -groupFromName "" -varFromName ""
     .NOTES
         There should be notes.
     .LINK
@@ -21,11 +21,11 @@ function Read-LibVarKeyVault {
     [OutputType([System.String])]
     param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [string] $projectFrom,
+        [string] $projectFromName,
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [string] $groupFromName,
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [string] $varFrom
+        [string] $varFromName
     )
     begin {
         Set-StrictMode -Version Latest
@@ -37,7 +37,7 @@ function Read-LibVarKeyVault {
         $vaultName = "tcc-uks-infra-common-kv"
         $subscription = "12345678-abcd-efgh-ijkl-1234abcd5678"
 
-        $name = "$($projectFrom)--$($groupFromName)--$($varFrom)"
+        $name = "$($projectFromName)--$($groupFromName)--$($varFromName)"
         $name = $name.Replace('.', '-') # secret names can only contain alpahnumeric and dashes
         $name = $name.Replace('_', '-')
 

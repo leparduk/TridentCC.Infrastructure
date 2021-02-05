@@ -33,12 +33,12 @@ Get-ChildItem -Path "..\Source\TridentCC.Common\Private" -Filter *.ps1 | ForEach
     . $_.FullName
 }
 
-# Get-ChildItem -Path "..\Source\TridentCC.Azure\Public" -Filter *.ps1 | ForEach-Object {
-#     . $_.FullName
-# }
+Get-ChildItem -Path "..\Source\TridentCC.Azure\Public" -Filter *.ps1 | ForEach-Object {
+    . $_.FullName
+}
 
-# Get-ChildItem -Path "..\Source\TridentCC.Azure\Private" -Filter *.ps1 | ForEach-Object {
-#     . $_.FullName
-# }
+Get-ChildItem -Path "..\Source\TridentCC.Azure\Private" -Filter *.ps1 | ForEach-Object {
+    . $_.FullName
+}
 
 Invoke-Pester -Configuration $configuration

@@ -5,14 +5,14 @@ function Read-LibVar {
         Read a Variable from a Group in a Project.
     .DESCRIPTION
         Read a Variable from a Group in a Project.
-    .PARAMETER projectFrom
+    .PARAMETER projectFromName
         The Name of the Project to read from
     .PARAMETER groupFromName
         The name of the Library to read from
-    .PARAMETER varFrom
+    .PARAMETER varFromName
         The name of the key to read from
     .EXAMPLE
-        read-LibVar -ProjectFrom "" -groupFromName "" -varFrom ""
+        read-LibVar -ProjectFromName "" -groupFromName "" -varFromName ""
     .NOTES
         There should be notes.
     .LINK
@@ -22,11 +22,11 @@ function Read-LibVar {
     [OutputType([System.String])]
     param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [string] $projectFrom,
+        [string] $projectFromName,
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [string] $groupFromName,
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [string] $varFrom
+        [string] $varFromName
     )
     begin {
         Set-StrictMode -Version Latest
@@ -50,12 +50,12 @@ function Read-LibVar {
         Install-Extension $extensionName
         [Console]::ResetColor()
 
-        $groupFrom = (az pipelines variable-group list --group-name $groupFromName --org $org --project $projectFrom -o json) | ConvertFrom-Json
+        $groupFrom = (az pipelines variable-group list --group-name $groupFromName --org $org --project $projectFromName -o json) | ConvertFrom-Json
         [Console]::ResetColor()
 
         $groupFromId = $groupFrom.id
 
-        $varsFrom = (az pipelines variable-group variable list --group-id $groupFromId --org $org --project $projectFrom -o json) | ConvertFrom-Json | Get-ObjectMember
+        $varsFrom = (az pipelines variable-group variable list --group-id $groupFromId --org $org --project $projectFromName -o json) | ConvertFrom-Json | Get-ObjectMember
         [Console]::ResetColor()
 
         foreach ($var in $varsFrom) {
@@ -63,7 +63,7 @@ function Read-LibVar {
             $key = $var.Key
             $value = '{0}' -f $var.Value
 
-            if ($key -eq $varFrom) {
+            if ($key -eq $varFromName) {
 
                 if ($var.IsSecret -eq $true) {
 

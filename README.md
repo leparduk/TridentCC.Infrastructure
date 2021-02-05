@@ -1,5 +1,6 @@
 # TridentCC.Infrastructure
 
+This project makes use of the following resources for reliability and improvement.
 
 https://github.com/andrewrdavidson/PSQualityCheck
 
