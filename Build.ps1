@@ -9,7 +9,7 @@ $PesterConfiguration.Run.PassThru = $true
 $PesterConfiguration.Should.ErrorAction = 'Stop'
 
 # Project Based
-$Result = Invoke-PSQualityCheck -ProjectPath '.\' -ScriptAnalyzerRulesPath @('../ScriptAnalyzerRules/Indented.CodingConventions/', '../PSScriptAnalyzer/Tests/Engine/CommunityAnalyzerRules/', '../InjectionHunter/') -HelpRulesPath '.\HelpRules.psd1' -PassThru -PesterConfiguration $PesterConfiguration
+$Result = Invoke-PSQualityCheck -ProjectPath '.\' -ScriptAnalyzerRulesPath @('./Analyzer/ScriptAnalyzerRules/Indented.CodingConventions/', './Analyzer/PSScriptAnalyzer/Tests/Engine/CommunityAnalyzerRules/', './Analyzer/InjectionHunter/') -HelpRulesPath '.\HelpRules.psd1' -PassThru -PesterConfiguration $PesterConfiguration
 
 if ($Result.Script.FailedCount -eq 0 -and $Result.Project.FailedCount -eq 0) {
 
@@ -19,7 +19,7 @@ else {
     Write-Information 'Modules not build - there were errors'
 }
 
-$Result = Invoke-PSQualityCheck -Path @('.\TridentCC.Azure\') -recurse -ScriptAnalyzerRulesPath @('../ScriptAnalyzerRules/Indented.CodingConventions/', '../PSScriptAnalyzer/Tests/Engine/CommunityAnalyzerRules/', '../InjectionHunter/') -HelpRulesPath '.\HelpRules.psd1' -PesterConfiguration $PesterConfiguration
+$Result = Invoke-PSQualityCheck -Path @('.\Scripts\') -recurse -ScriptAnalyzerRulesPath @('./Analyzer/ScriptAnalyzerRules/Indented.CodingConventions/', './Analyzer/PSScriptAnalyzer/Tests/Engine/CommunityAnalyzerRules/', './Analyzer/InjectionHunter/') -HelpRulesPath '.\HelpRules.psd1' -PesterConfiguration $PesterConfiguration
 
 if ($Result.Script.FailedCount -eq 0 -and $Result.Project.FailedCount -eq 0) {
 

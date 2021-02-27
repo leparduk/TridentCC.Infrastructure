@@ -1,0 +1,9 @@
+[submodule "Analyzer/InjectionHunter"]
+	path = Analyzer/InjectionHunter
+	url = https://github.com/matt2005/InjectionHunter
+[submodule "Analyzer/ScriptAnalyzerRules"]
+	path = Analyzer/ScriptAnalyzerRules
+	url = https://github.com/indented-automation/ScriptAnalyzerRules
+[submodule "Analyzer/PSScriptAnalyzer"]
+	path = Analyzer/PSScriptAnalyzer
+	url = https://github.com/PowerShell/PSScriptAnalyzer
