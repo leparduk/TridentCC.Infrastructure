@@ -8,17 +8,23 @@ $PesterConfiguration.Output.Verbosity = 'Detailed'
 $PesterConfiguration.Run.PassThru = $true
 $PesterConfiguration.Should.ErrorAction = 'Stop'
 
-#Invoke-PSQualityCheck -Path @('.\Scripts') -recurse -ScriptAnalyzerRulesPath @('../ScriptAnalyzerRules/Indented.CodingConventions/', '../PSScriptAnalyzer/Tests/Engine/CommunityAnalyzerRules/', '../InjectionHunter/') -HelpRulesPath '.\HelpRules.psd1' -PesterConfiguration $PesterConfiguration
-
 # Project Based
 $Result = Invoke-PSQualityCheck -ProjectPath '.\' -ScriptAnalyzerRulesPath @('../ScriptAnalyzerRules/Indented.CodingConventions/', '../PSScriptAnalyzer/Tests/Engine/CommunityAnalyzerRules/', '../InjectionHunter/') -HelpRulesPath '.\HelpRules.psd1' -PassThru -PesterConfiguration $PesterConfiguration
 
 if ($Result.Script.FailedCount -eq 0 -and $Result.Project.FailedCount -eq 0) {
 
-    #Build-Module -debug .\source\TridentCC.Common\build.psd1
-
-    Build-Module -debug .\source\TridentCC.Azure\build.psd1
+    Build-Module .\source\TridentCC.Common\build.psd1
 }
 else {
     Write-Information 'Modules not build - there were errors'
+}
+
+$Result = Invoke-PSQualityCheck -Path @('.\TridentCC.Azure\') -recurse -ScriptAnalyzerRulesPath @('../ScriptAnalyzerRules/Indented.CodingConventions/', '../PSScriptAnalyzer/Tests/Engine/CommunityAnalyzerRules/', '../InjectionHunter/') -HelpRulesPath '.\HelpRules.psd1' -PesterConfiguration $PesterConfiguration
+
+if ($Result.Script.FailedCount -eq 0 -and $Result.Project.FailedCount -eq 0) {
+
+    # Copy Script files to release folder
+}
+else {
+    Write-Information 'Scripts not exported - there were errors'
 }
