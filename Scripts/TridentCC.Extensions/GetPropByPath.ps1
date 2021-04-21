@@ -1,3 +1,16 @@
+<#
+    .SYNOPSIS
+        This extensioons method is used to extract properies from a PSObject and present them as an array.
+    .DESCRIPTION
+        This extensioons method is used to extract properies from a PSObject and present them as an array.
+    .EXAMPLE
+        . .\GetPropByPath.ps1
+    .NOTES
+        There should be notes.
+    .LINK
+        None
+#>
+
 try {
     $exists = ((Get-TypeData System.Management.Automation.PSCustomObject).Members.Keys -match "GetPropByPath")
 }

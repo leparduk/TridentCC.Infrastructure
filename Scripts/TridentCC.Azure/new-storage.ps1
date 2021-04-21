@@ -1,5 +1,4 @@
-
-    <#
+<#
     .SYNOPSIS
         The new-storage cmdlet creates a storage account of the specified sku in the specified region Unlike most cmdlets location is not derived from resourcegroup.location and must be specified.
     .DESCRIPTION
@@ -23,66 +22,65 @@
     .LINK
         https://docs.microsoft.com/en-us/cli/azure/storage/account?view=azure-cli-latest#az-storage-account-create
 #>
-    [cmdletbinding(SupportsShouldProcess)]
-    [OutputType([System.object[]])]
-    param(
-        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [string] $ResourceGroupName,
-        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [string] $storName,
-        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [string] $location,
+[cmdletbinding(SupportsShouldProcess)]
+[OutputType([System.object[]])]
+param(
+    [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+    [string] $ResourceGroupName,
+    [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+    [string] $storName,
+    [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+    [string] $location,
 
-        [string] $sku,
-        [bool] $allowpubaccess,
-        [string] $minTLS
-    )
-    begin {
-        Set-StrictMode -Version Latest
+    [string] $sku,
+    [bool] $allowpubaccess,
+    [string] $minTLS
+)
+begin {
+    Set-StrictMode -Version Latest
+}
+process {
 
-    }
-    process {
+    $storname = $storname.ToLowerInvariant().Replace("-", "")
+    $location = $location.Replace("-", " ")
 
-        $storname = $storname.ToLowerInvariant().Replace("-", "")
-        $location = $location.Replace("-", " ")
+    $LRSexists = az storage account show -n $storname
 
-        $LRSexists = az storage account show -n $storname
+    if ($null -eq $LRSexists) {
 
-        if ($null -eq $LRSexists) {
-
-            if ([string]::IsNullOrEmpty($sku)) {
-                $sku = "Standard_LRS"
-            }  # end if
-            if ([string]::IsNullOrEmpty($mintls)) {
-                $mintls = "TLS1_2"
-            } # end if
-
-            if ($PSCmdlet.ShouldProcess($name)) {
-                az storage account create -g $resourcegroupname -n $storname -l "$($location)" --sku $sku --allow-blob-public-access $allowpubaccess --min-tls-version $mintls
-            }
-            else {
-                Write-Information -MessageData "az storage account create -g $resourcegroupname -n $storname -l \"$($location)\" --sku $sku --allow-blob-public-access $allowpubaccess --min-tls-version $mintls"
-            }
+        if ([string]::IsNullOrEmpty($sku)) {
+            $sku = "Standard_LRS"
+        }  # end if
+        if ([string]::IsNullOrEmpty($mintls)) {
+            $mintls = "TLS1_2"
         } # end if
 
-        if (-not [string]::IsNullOrEmpty($mintls)) {
+        if ($PSCmdlet.ShouldProcess($name)) {
+            az storage account create -g $resourcegroupname -n $storname -l "$($location)" --sku $sku --allow-blob-public-access $allowpubaccess --min-tls-version $mintls
+        }
+        else {
+            Write-Information -MessageData "az storage account create -g $resourcegroupname -n $storname -l \"$($location)\" --sku $sku --allow-blob-public-access $allowpubaccess --min-tls-version $mintls"
+        }
+    } # end if
 
-            if ($PSCmdlet.ShouldProcess($name)) {
-                az storage account update -g $resourcegroupname -n $storname --min-tls-version $mintls
-            }
-            else {
-                Write-Information -MessageData "az storage account update -g $resourcegroupname -n $storname --min-tls-version $mintls"
-            } # end if
+    if (-not [string]::IsNullOrEmpty($mintls)) {
 
+        if ($PSCmdlet.ShouldProcess($name)) {
+            az storage account update -g $resourcegroupname -n $storname --min-tls-version $mintls
+        }
+        else {
+            Write-Information -MessageData "az storage account update -g $resourcegroupname -n $storname --min-tls-version $mintls"
         } # end if
 
-        if (-not [string]::IsNullOrEmpty($allowpubaccess)) {
+    } # end if
 
-            if ($PSCmdlet.ShouldProcess($name)) {
-                az storage account update -g $resourcegroupname -n $storname --allow-blob-public-access $allowpubaccess
-            }
-            else {
-                Write-Information -MessageData "az storage account update -g $resourcegroupname -n $storname --allow-blob-public-access $allowpubaccess"
-            } # end if
+    if (-not [string]::IsNullOrEmpty($allowpubaccess)) {
+
+        if ($PSCmdlet.ShouldProcess($name)) {
+            az storage account update -g $resourcegroupname -n $storname --allow-blob-public-access $allowpubaccess
+        }
+        else {
+            Write-Information -MessageData "az storage account update -g $resourcegroupname -n $storname --allow-blob-public-access $allowpubaccess"
         } # end if
-    }
+    } # end if
+}

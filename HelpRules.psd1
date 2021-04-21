@@ -35,8 +35,8 @@
     }
     '3' = @{
         Key            = '.PARAMETER'
-        Required       = $true
-        MinOccurrences = 1
+        Required       = $false
+        MinOccurrences = 0
         MaxOccurrences = 99
     }
     '4' = @{
