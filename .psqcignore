@@ -4,4 +4,16 @@ Extraction.ps1
 *.psd1
 **/data/**
 **/bin/**
-
+TridentCC.Extensions/**
+TridentCC.Config/**
+Analyzer/
+*.md
+*.txt
+.gitignore
+.psqcignore
+.editorconfig
+.gitmodules
+[bB]uild.ps1
+install.depend.ps1
+uninstall-pester.ps1
+installBicep.ps1
