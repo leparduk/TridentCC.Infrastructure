@@ -1,4 +1,4 @@
-Describe "Write-LibVarKewyVault" {
+Describe "Write-LibVarKeyVault" {
 
     Context "Parameter Tests" -Foreach @(
         @{ 'Name' = 'projectToName'; 'Type' = 'String'; 'MandatoryFlag' = $true; 'ParameterSet' = '__AllParameterSets' }

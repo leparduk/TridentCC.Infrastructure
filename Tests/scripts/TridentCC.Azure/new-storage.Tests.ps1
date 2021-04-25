@@ -1,5 +1,5 @@
 param (
-    [string]$ScriptName
+    [string]$fileContent
 )
 
 Describe "New-Storage Script test" {
@@ -7,7 +7,7 @@ Describe "New-Storage Script test" {
     BeforeAll {
 
         # Read the script file
-        $fileContent = Get-Content -Path $scriptName -Raw
+        #$fileContent = Get-Content -Path $scriptName -Raw
         $parsedScript = [System.Management.Automation.Language.Parser]::ParseInput($fileContent, [ref]$null, [ref]$null)
         $params = $parsedScript.ParamBlock.Parameters
 
