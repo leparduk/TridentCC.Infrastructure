@@ -4,8 +4,8 @@ Extraction.ps1
 *.psd1
 **/data/**
 **/bin/**
-TridentCC.Extensions/**
-TridentCC.Config/**
+**/TridentCC.Extensions/**
+**/TridentCC.Config/subscriptions.ps1
 Analyzer/
 *.md
 *.txt

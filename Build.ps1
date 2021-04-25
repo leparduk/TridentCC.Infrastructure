@@ -159,11 +159,9 @@ else {
 
 # End of module build
 
-
 # Script checks
 #$scriptFiles = Get-ChildItem -Path ".\Scripts" -Filter "*.ps1" -Recurse
-#$scriptFiles = Get-FilteredChildItem -Path ".\Scripts" -IgnoreFileName .psqcignore
-$scriptFiles = Get-FilteredChildItem -Path ".\Scripts" -IgnoreFileName ..\.psqcignore
+$scriptFiles = Get-FilteredChildItem -Path ".\Scripts" -IgnoreFileName "..\.psqcignore"
 
 $scriptResults = @()
 
