@@ -159,14 +159,16 @@ else {
 
 # End of module build
 
+
 # Script checks
-$scriptFiles = Get-ChildItem -Path ".\Scripts" -Filter "*.ps1" -Recurse
+#$scriptFiles = Get-ChildItem -Path ".\Scripts" -Filter "*.ps1" -Recurse
+$scriptFiles = Get-FilteredChildItem -Path ".\Scripts" -IgnoreFileName .psqcignore
 
 $scriptResults = @()
 
 foreach ($script in $scriptFiles) {
 
-    if ($script.name -eq "subscriptions.ps1" -or $script.name -eq 'GetPropByPath.ps1') { continue }
+    if ($script.extension -ne ".ps1") { continue }
 
     $Result = Invoke-PSQualityCheck -File $script.FullName -ScriptAnalyzerRulesPath $ScriptRules -HelpRulesPath '.\HelpRules.psd1' -Passthru -PesterConfiguration $PesterConfiguration
 
