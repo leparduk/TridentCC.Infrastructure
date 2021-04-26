@@ -189,7 +189,7 @@ foreach ($result in $testResults) {
 # If there are no script failures then copy the scripts to the Artifacts folder
 if ($testFailedCount -eq 0) {
     $ArtifactsFolder = Resolve-Path -Path ".\artifacts"
-    Copy-Item -Path "Scripts" -Destination (Join-Path -Path $ArtifactsFolder -ChildPath "scripts") -Recurse -Force -Container
+    Copy-Item -Path "Scripts" -Destination $ArtifactsFolder -Recurse -Force -Container
 }
 else {
     Write-Error -Message "One or more scripts were not copied to artifact folder because there were failed unit tests"
