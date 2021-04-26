@@ -1,7 +1,9 @@
 Import-Module -Name Pester -MinimumVersion 5.1.0
 Import-Module -Name PSQualityCheck -MinimumVersion 1.3.0
+Import-Module -Name Cofl.Util -MinimumVersion 1.2.2
 
 $InformationPreference = 'Continue'
+$ErrorActionPreference = 'Stop'
 
 # PesterConfiguration
 $PesterConfiguration = [PesterConfiguration]::Default
@@ -38,11 +40,17 @@ function Get-FunctionFileContent {
         if ($parsedFunctions.Count -gt 1) {
             throw "Too many functions in file, file is invalid"
         }
-        if ($parsedFunctions.Count -eq 1) {
+        if ($parsedFunctions.Count -eq 0) {
+            for ($line = 0; $line -lt $fileContent.Count; $line++) {
+                $parsedFileContent += $fileContent[$line]
+                $parsedFileContent += "`r`n"
+            }
+        }
+        else {
             if ($fileContent.Count -gt 1) {
                 foreach ($function in $parsedFunctions) {
                     $startLine = ($function.StartLine)
-                    for ($line = $fileContent.Count; $line -gt $function.StartLine; $line--) {
+                    for ($line = $fileContent.Count - 1; $line -gt $function.StartLine; $line--) {
                         if ($fileContent[$line] -like "*}*") {
                             $endLine = $line
                             break
@@ -62,19 +70,6 @@ function Get-FunctionFileContent {
                 $parsedFileContent = $fileContent.substring($startBracket + 1, $endBracket - 1 - $startBracket)
             }
         }
-        else {
-            if ($fileContent.Count -gt 1) {
-                for ($line = 0; $line -lt $fileContent.Count; $line++) {
-                    $parsedFileContent += $fileContent[$line]
-                    if ($line -ne ($fileContent.Count - 1)) {
-                        $parsedFileContent += "`r`n"
-                    }
-                }
-            }
-            else {
-                $parsedFileContent = $fileContent
-            }
-        }
     }
     catch {
         throw
@@ -82,21 +77,37 @@ function Get-FunctionFileContent {
     return $parsedFileContent
 }
 
-# Project Based
-$qualityResult = Invoke-PSQualityCheck -ProjectPath '.\' -ScriptAnalyzerRulesPath $ScriptRules -HelpRulesPath '.\HelpRules.psd1' -Passthru -PesterConfiguration $PesterConfiguration
+$sourcePath = Resolve-Path -Path "source"
+$scriptsPath = Resolve-Path -Path "scripts"
+$ignoreFile = Resolve-Path -Path ".psqcignore"
 
+# Start of Project Based checks
+$qualityCheckSplat = @{
+    'ProjectPath'             = (Resolve-Path -Path '.\')
+    'ScriptAnalyzerRulesPath' = $ScriptRules
+    'HelpRulesPath'           = (Resolve-Path -Path '.\HelpRules.psd1')
+    'Passthru'                = $true
+    'PesterConfiguration'     = $PesterConfiguration
+    'IgnoreFile'              = $ignoreFile
+}
+$qualityResult = Invoke-PSQualityCheck @qualityCheckSplat
+# End of Project Based checks
+
+# Running tests
 if ($qualityResult.Script.FailedCount -eq 0 -and $qualityResult.Project.FailedCount -eq 0) {
 
-    $Modules = Get-ChildItem -Path ".\Source" -Directory
+    $testResults = @()
 
-    $functionResults = @()
+    # Run the unit tests for the public functions of any modules in the project
 
-    foreach ($module in $Modules) {
+    # Get the modules (the directories in the Source folder)
+    $modules = Get-ChildItem -Path $sourcePath -Directory
 
+    foreach ($module in $modules) {
+
+        # Get the public functions (minus any excluded by the ignore file)
         $functionFiles = @()
-        # $privateFunctionFiles = @()
-
-        $functionFiles += Get-ChildItem -Path (Join-Path -Path $Module.FullName -ChildPath "public")
+        $functionFiles += Get-FilteredChildItem -Path (Join-Path -Path $module.FullName -ChildPath "public") -IgnoreFileName $ignoreFile
 
         # If there are any scripts in the private folder with corresponding tests then run those too
         # $privateFunctionFiles += Get-ChildItem -Path (Join-Path -Path $Module.FullName -ChildPath "private")
@@ -110,95 +121,81 @@ if ($qualityResult.Script.FailedCount -eq 0 -and $qualityResult.Project.FailedCo
 
         foreach ($function in $functionFiles) {
 
-            # Write-Host ".\tests\unit\$($module.BaseName)\$($function.BaseName).Tests.psd1" -ForegroundColor Yellow
-            # Write-Host $function.FullName -ForegroundColor Yellow
-
             $fileContent = Get-FunctionFileContent -Path $function.FullName
             . "$($function.FullName)"
 
             $container = New-PesterContainer -Path ".\tests\unit\$($module.BaseName)\$($function.BaseName).Tests.ps1" -Data @{FileContent = $fileContent }
             $PesterConfiguration.Run.Container = $container
 
-            $functionResults += Invoke-Pester -Configuration $PesterConfiguration
+            $testResults += Invoke-Pester -Configuration $PesterConfiguration
 
         }
     }
+
+    # TODO: Add integration tests here
+
 }
 else {
-
     # Write-Information 'Functions not tested - there were project quality check errors'
     # Write-Warning -Message "Project Quality Check fails"
-    Write-Error -Message "Project Quality Check fails"
+    Write-Error -Message "Project quality check failed"
     break
+}
+# End of running tests
 
+# Start of module build
+# Build the module(s) only if there are no unit/integration test failures
+$testFailedCount = 0
+
+foreach ($result in $testResults) {
+    $testFailedCount += $result.FailedCount
 }
 
-$failedCount = 0
-
-foreach ($result in $functionResults) {
-    $failedCount += $result.FailedCount
-}
-
-if ($failedCount -eq 0 ) {
-
-    foreach ($module in $Modules) {
-
-        $buildFile = ".\source\$($module.BaseName)\build.psd1"
-        Write-Host $buildFile -ForegroundColor Yellow
-
-        Build-Module -SourcePath $buildFile
-
+if ($testFailedCount -eq 0 ) {
+    foreach ($module in $modules) {
+        $buildPropertiesFile = ".\source\$($module.BaseName)\build.psd1"
+        Build-Module -SourcePath $buildPropertiesFile
     }
 }
 else {
-
-    Write-Information 'Modules not build - there were errors'
+    Write-Error -Message 'One or more module were not built because there were function unit test errors'
     throw
-
 }
-
 # End of module build
 
-# Script checks
-#$scriptFiles = Get-ChildItem -Path ".\Scripts" -Filter "*.ps1" -Recurse
-$scriptFiles = Get-FilteredChildItem -Path ".\Scripts" -IgnoreFileName "..\.psqcignore"
+# Run any available unit tests for files in Scripts folder
+$scriptFiles = @()
+$testResults = @()
+$scriptFiles += Get-FilteredChildItem -Path $scriptsPath -IgnoreFileName $ignoreFile
+foreach ($scriptFile in $scriptFiles) {
 
-$scriptResults = @()
+    $scriptFolder = $scriptFile.FullName -ireplace [regex]::Escape($scriptsPath.Path), ''
+    $scriptFolder = $scriptFolder -ireplace [regex]::Escape($scriptFile.Name), ''
 
-foreach ($script in $scriptFiles) {
+    $fileContent = Get-FunctionFileContent -Path $scriptFile.FullName
 
-    if ($script.extension -ne ".ps1") { continue }
+    $container = New-PesterContainer -Path ".\tests\scripts$scriptFolder\$($scriptFile.BaseName).Tests.ps1" -Data @{FileContent = $fileContent }
+    $PesterConfiguration.Run.Container = $container
 
-    $Result = Invoke-PSQualityCheck -File $script.FullName -ScriptAnalyzerRulesPath $ScriptRules -HelpRulesPath '.\HelpRules.psd1' -Passthru -PesterConfiguration $PesterConfiguration
-
-    $folder = Split-Path -Path $script.DirectoryName -Leaf
-
-    Write-Host ".\tests\scripts\$folder\$($script.BaseName).Tests.ps1"
-    if ((Test-Path -Path ".\tests\scripts\$folder\$($script.BaseName).Tests.ps1") -and $result.Script.FailedCount -eq 0) {
-
-        $fileContent = Get-FunctionFileContent -Path $script.FullName
-
-        $container = New-PesterContainer -Path ".\tests\scripts\$folder\$($script.BaseName).Tests.ps1" -Data @{FileContent = $fileContent }
-        $PesterConfiguration.Run.Container = $container
-
-        $scriptResults += Invoke-Pester -Configuration $PesterConfiguration
-
-    }
+    $testResults += Invoke-Pester -Configuration $PesterConfiguration
 
 }
 
+$testFailedCount = 0
 
+foreach ($result in $testResults) {
+    $testFailedCount += $result.FailedCount
+}
 
+# If there are no script failures then copy the scripts to the Artifacts folder
+if ($testFailedCount -eq 0) {
+    $ArtifactsFolder = Resolve-Path -Path ".\artifacts"
+    Copy-Item -Path "Scripts" -Destination $ArtifactsFolder -Recurse -Force -Container
+}
+else {
+    Write-Error -Message "One or more scripts were not copied to artifact folder because there were failed unit tests"
+    break
+}
+# End of script copy
 
-# $Result = Invoke-PSQualityCheck -Path @('.\Scripts') -recurse -ScriptAnalyzerRulesPath $ScriptRules -HelpRulesPath '.\HelpRules.psd1' -Passthru -PesterConfiguration $PesterConfiguration
-
-# if ($Result.Script.FailedCount -eq 0) {
-
-#     $Dest = ".\artifacts"
-#     # Copy Script files to release folder
-#     New-Item -ItemType Directory -Force -Path $Dest
-#     Copy-Item ".\Scripts\*.*" -Destination $Dest -Recurse -Force
-# }
-# else {
-#     Write-Information 'Scripts not exported - there were errors'
-# }
+### END OF SCRIPT

@@ -15,4 +15,6 @@
     PowerShellGet    = 'Latest'
     PSScriptAnalyzer = 'Latest'
     PSQualityCheck   = 'Latest'
+    InvokeBuild      = 'Latest'
+    "Cofl.Util"      = 'Latest'
 }
