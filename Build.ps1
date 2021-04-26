@@ -76,7 +76,7 @@ function Get-FunctionFileContent {
     return $parsedFileContent
 }
 
-$sourcePath = Resolve-Path -Path "Source"
+$sourcePath = Resolve-Path -Path "source"
 $scriptsPath = Resolve-Path -Path "scripts"
 $ignoreFile = Resolve-Path -Path ".psqcignore"
 
@@ -93,8 +93,7 @@ $qualityResult = Invoke-PSQualityCheck @qualityCheckSplat
 # End of Project Based checks
 
 # Running tests
-# if ($qualityResult.Script.FailedCount -eq 0 -and $qualityResult.Project.FailedCount -eq 0) {
-if ($qualityResult -eq $qualityResult) {
+if ($qualityResult.Script.FailedCount -eq 0 -and $qualityResult.Project.FailedCount -eq 0) {
 
     $testResults = @()
 
@@ -199,57 +198,3 @@ else {
 # End of script copy
 
 ### END OF SCRIPT
-# Anything below this line is test code or no longer required code
-
-##=================----------------------==========================##
-
-# Script Checks here are no longer required, they are performed as part of the Project Checks at the top of this script block
-# # Script checks
-# #$scriptFiles = Get-ChildItem -Path ".\Scripts" -Filter "*.ps1" -Recurse
-# #$scriptFiles = Get-FilteredChildItem -Path ".\Scripts" -IgnoreFileName .psqcignore
-
-# $scriptPath = Resolve-Path -Path "Scripts"
-# $ignorePath = Resolve-Path -Path ".psqcignore"
-
-# Write-Host "SP = $scriptPath" -ForegroundColor Black -BackgroundColor White
-# Write-Host "IP = $ignorePath" -ForegroundColor Black -BackgroundColor White
-
-# # $scriptFiles = Get-FilteredChildItem -Path "Scripts" -IgnoreFileName ".psqcignore"
-# $scriptFiles = Get-FilteredChildItem -Path $scriptPath -IgnoreFileName $ignorePath
-
-# $scriptResults = @()
-
-# foreach ($script in $scriptFiles) {
-
-#     # if ($script.extension -ne ".ps1") { continue }
-
-#     $Result = Invoke-PSQualityCheck -File $script.FullName -ScriptAnalyzerRulesPath $ScriptRules -HelpRulesPath '.\HelpRules.psd1' -Passthru -PesterConfiguration $PesterConfiguration
-
-#     $folder = Split-Path -Path $script.DirectoryName -Leaf
-
-#     # Write-Host ".\tests\scripts\$folder\$($script.BaseName).Tests.ps1"
-#     if ((Test-Path -Path ".\tests\scripts\$folder\$($script.BaseName).Tests.ps1") -and $result.Script.FailedCount -eq 0) {
-
-#         $fileContent = Get-FunctionFileContent -Path $script.FullName
-
-#         $container = New-PesterContainer -Path ".\tests\scripts\$folder\$($script.BaseName).Tests.ps1" -Data @{FileContent = $fileContent }
-#         $PesterConfiguration.Run.Container = $container
-
-#         $scriptResults += Invoke-Pester -Configuration $PesterConfiguration
-
-#     }
-
-# }
-
-# $Result = Invoke-PSQualityCheck -Path @('.\Scripts') -recurse -ScriptAnalyzerRulesPath $ScriptRules -HelpRulesPath '.\HelpRules.psd1' -Passthru -PesterConfiguration $PesterConfiguration
-
-# if ($Result.Script.FailedCount -eq 0) {
-
-#     $Dest = ".\artifacts"
-#     # Copy Script files to release folder
-#     New-Item -ItemType Directory -Force -Path $Dest
-#     Copy-Item ".\Scripts\*.*" -Destination $Dest -Recurse -Force
-# }
-# else {
-#     Write-Information 'Scripts not exported - there were errors'
-# }
