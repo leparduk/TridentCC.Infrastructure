@@ -1,14 +1,20 @@
-**/*.Tests.ps1
-**/*.Checks.ps1
-Extraction.ps1
-*.psd1
-**/data/**
+# Folders
+
+## Module folders
 **/bin/**
-**/TridentCC.Extensions/**
-**/TridentCC.Config/subscriptions.ps1
+**/data/**
+**/en-US/**
+
+## Other folders
 Analyzer/
+TridentCC.Config/
+
+# File Extensions
+*.psd1
 *.md
 *.txt
+
+# Specific Files
 .gitignore
 .psqcignore
 .editorconfig
@@ -17,3 +23,14 @@ Analyzer/
 install.depend.ps1
 uninstall-pester.ps1
 installBicep.ps1
+
+# Testing
+
+# **/*.Tests.ps1
+# **/*.Checks.ps1
+# Extraction.ps1
+# TridentCC.Extensions/
+# **/[Ss]cripts/TridentCC.Extensions/*
+# **/[Ss]cripts/TridentCC.Config/*
+# [Ss]cripts/*.psm1
+# [Ss]cripts/**/*.psm1
