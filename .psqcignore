@@ -8,6 +8,7 @@
 ## Other folders
 Analyzer/
 TridentCC.Config/
+TridentCC.Extensions/
 
 # File Extensions
 *.psd1

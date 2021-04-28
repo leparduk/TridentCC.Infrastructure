@@ -1,6 +1,6 @@
 Import-Module -Name Pester -MinimumVersion 5.1.0
-Import-Module -Name PSQualityCheck -MinimumVersion 1.3.0
 Import-Module -Name Cofl.Util -MinimumVersion 1.2.2
+Import-Module -Name ".\build-functions.psm1"
 
 $InformationPreference = 'Continue'
 $ErrorActionPreference = 'Stop'
@@ -19,71 +19,26 @@ $ScriptRules = @(
     #, './Analyzer/InjectionHunter/'
 )
 
-function Get-FunctionFileContent {
-    [CmdletBinding()]
-    [OutputType([System.String[]])]
-    param (
-        [parameter(Mandatory = $true)]
-        [string]$Path
-    )
-
-    try {
-        $fileContent = Get-Content -Path $Path
-        $parserErrors = $null
-        if ([string]::IsNullOrEmpty($fileContent)) {
-            $parsedFileFunctions = @()
-        }
-        else {
-            $parsedFileFunctions = [System.Management.Automation.PSParser]::Tokenize($fileContent, [ref]$parserErrors)
-        }
-        $parsedFunctions = ($parsedFileFunctions | Where-Object { $_.Type -eq "Keyword" -and $_.Content -like 'function' })
-        if ($parsedFunctions.Count -gt 1) {
-            throw "Too many functions in file, file is invalid"
-        }
-        if ($parsedFunctions.Count -eq 0) {
-            for ($line = 0; $line -lt $fileContent.Count; $line++) {
-                $parsedFileContent += $fileContent[$line]
-                $parsedFileContent += "`r`n"
-            }
-        }
-        else {
-            if ($fileContent.Count -gt 1) {
-                foreach ($function in $parsedFunctions) {
-                    $startLine = ($function.StartLine)
-                    for ($line = $fileContent.Count - 1; $line -gt $function.StartLine; $line--) {
-                        if ($fileContent[$line] -like "*}*") {
-                            $endLine = $line
-                            break
-                        }
-                    }
-                    for ($line = $startLine; $line -lt $endLine; $line++) {
-                        $parsedFileContent += $fileContent[$line]
-                        if ($line -ne ($fileContent.Count - 1)) {
-                            $parsedFileContent += "`r`n"
-                        }
-                    }
-                }
-            }
-            else {
-                [int]$startBracket = $fileContent.IndexOf('{')
-                [int]$endBracket = $fileContent.LastIndexOf('}')
-                $parsedFileContent = $fileContent.substring($startBracket + 1, $endBracket - 1 - $startBracket)
-            }
-        }
-    }
-    catch {
-        throw
-    }
-    return $parsedFileContent
-}
-
-$sourcePath = Resolve-Path -Path "source"
-$scriptsPath = Resolve-Path -Path "scripts"
+$projectPath = Resolve-Path -Path ".\"
+$sourcePath = Resolve-Path -Path "$projectPath\source"
+$scriptsPath = Resolve-Path -Path "$projectPath\scripts"
+$testsPath = Resolve-Path -Path "$projectPath\tests"
 $ignoreFile = Resolve-Path -Path ".psqcignore"
+#$moduleName = "TridentCC.Common"
+
+$buildFolder = Join-Path -Path "$projectPath" -ChildPath "build"
+$artifactsFolder = Join-Path -Path "$projectPath" -ChildPath "artifacts"
+
+if (-not (Test-Path -Path $artifactsFolder -ErrorAction SilentlyContinue)) {
+    New-Item -Path $artifactsFolder -ItemType "directory" -force
+}
+if (-not (Test-Path -Path $buildFolder -ErrorAction SilentlyContinue)) {
+    New-Item -Path $buildFolder -ItemType "directory" -force
+}
 
 # Start of Project Based checks
 $qualityCheckSplat = @{
-    'ProjectPath'             = (Resolve-Path -Path '.\')
+    'ProjectPath'             = $projectPath
     'ScriptAnalyzerRulesPath' = $ScriptRules
     'HelpRulesPath'           = (Resolve-Path -Path '.\HelpRules.psd1')
     'Passthru'                = $true
@@ -124,7 +79,7 @@ if ($qualityResult.Script.FailedCount -eq 0 -and $qualityResult.Project.FailedCo
             $fileContent = Get-FunctionFileContent -Path $function.FullName
             . "$($function.FullName)"
 
-            $container = New-PesterContainer -Path ".\tests\unit\$($module.BaseName)\$($function.BaseName).Tests.ps1" -Data @{FileContent = $fileContent }
+            $container = New-PesterContainer -Path "$testsPath\unit\$($module.BaseName)\$($function.BaseName).Tests.ps1" -Data @{FileContent = $fileContent }
             $PesterConfiguration.Run.Container = $container
 
             $testResults += Invoke-Pester -Configuration $PesterConfiguration
@@ -174,7 +129,7 @@ foreach ($scriptFile in $scriptFiles) {
 
     $fileContent = Get-FunctionFileContent -Path $scriptFile.FullName
 
-    $container = New-PesterContainer -Path ".\tests\scripts$scriptFolder\$($scriptFile.BaseName).Tests.ps1" -Data @{FileContent = $fileContent }
+    $container = New-PesterContainer -Path "$testsPath\scripts$scriptFolder\$($scriptFile.BaseName).Tests.ps1" -Data @{FileContent = $fileContent }
     $PesterConfiguration.Run.Container = $container
 
     $testResults += Invoke-Pester -Configuration $PesterConfiguration
@@ -187,13 +142,27 @@ foreach ($result in $testResults) {
     $testFailedCount += $result.FailedCount
 }
 
-# If there are no script failures then copy the scripts to the Artifacts folder
+# If there are no script failures then copy the scripts to the build folder and archive to the Artifacts folder
 if ($testFailedCount -eq 0) {
-    $ArtifactsFolder = Resolve-Path -Path ".\artifacts"
-    Copy-Item -Path "Scripts" -Destination $ArtifactsFolder -Recurse -Force -Container
+
+    $builtScriptsFolder = Join-Path -Path $buildFolder -ChildPath "scripts"
+
+    if (-not (Test-Path -Path $builtScriptsFolder -ErrorAction SilentlyContinue)) {
+        New-Item -Path $buildFolder -Name "scripts" -ItemType "directory" -force
+    }
+
+    Copy-Item -Path "Scripts" -Destination $buildFolder -Recurse -Force -Container
+
+    $compressSplat = @{
+        Path             = $builtScriptsFolder
+        CompressionLevel = "Fastest"
+        DestinationPath  = "$artifactsFolder\scripts.zip"
+        Update           = $true
+    }
+    Compress-Archive @compressSplat
 }
 else {
-    Write-Error -Message "One or more scripts were not copied to artifact folder because there were failed unit tests"
+    Write-Error -Message "Scripts were not copied to artifacts folder because there were failed unit tests"
     break
 }
 # End of script copy

@@ -3,7 +3,7 @@
 @{
     ModuleManifest           = "TridentCC.Common.psd1"
     # Subsequent relative paths are to the ModuleManifest
-    OutputDirectory          = "../../Artifacts/TridentCC.Common"
+    OutputDirectory          = "../../build/TridentCC.Common"
     VersionedOutputDirectory = $true
     CopyDirectories          = @('en-US')
 }

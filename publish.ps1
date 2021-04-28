@@ -1,12 +1,35 @@
-$Module = 'TridentCC.Common'
-$Version = "1.0.0"
+$moduleName = 'TridentCC.Common'
+$repositoryName = "$($moduleName)-local"
+$Version = (Import-PowerShellDataFile -Path ".\source\$moduleName\$moduleName.psd1").ModuleVersion
+$artifactsFolder = Join-Path -Path ".\" -ChildPath "artifacts"
 
-New-Item -ItemType directory -Path  ./publish -force
+if (-not (Test-Path -Path $artifactsFolder -ErrorAction SilentlyContinue)) {
+    New-Item -ItemType directory -Path $artifactsFolder
+}
 
-Register-PSRepository -Name "$($Module)-local" -SourceLocation '.\publish\' -InstallationPolicy Trusted
+if ( $null -ne (Get-InstalledModule -Name $moduleName -ErrorAction SilentlyContinue)) {
+    unInstall-Module $moduleName
+}
 
-Publish-Module -Path ".\artifacts\$($Module)\$($Version)" -Repository "$($Module)-local" -NuGetApiKey 'use real NuGetApiKey for real nuget server here'
+# if ( $null -ne (Get-Module -Name "$($moduleName)" -ErrorAction SilentlyContinue )) {
+#     Write-Warning "true $moduleName module"
+# }
 
-Install-Module "$($Module)" -Repository "$($Module)-local"
+if ( $null -ne (Get-PSRepository -Name $repositoryName -ErrorAction SilentlyContinue)) {
 
-Get-PSRepository
+    Unregister-PSRepository -Name $repositoryName
+}
+
+$Artifact = Join-Path -Path $artifactsFolder -ChildPath "$($moduleName).$($Version).nupkg"
+
+if ((Test-Path -Path $Artifact -ErrorAction SilentlyContinue)) {
+    Remove-Item -Path $Artifact
+}
+
+Register-PSRepository -Name $repositoryName -SourceLocation $artifactsFolder -InstallationPolicy Trusted
+
+Publish-Module -Path ".\build\$($moduleName)\$($Version)" -Repository $repositoryName -NuGetApiKey 'use real NuGetApiKey for real nuget server here'
+
+Get-PSRepository -Name $repositoryName
+
+Find-Module -Name "$($moduleName)" -Repository $repositoryName | Select-Object Name, Version

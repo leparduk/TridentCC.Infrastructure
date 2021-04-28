@@ -1,4 +1,5 @@
-artifacts/*
-Config/*
-Analyzer/*
-Scratch/*
+artifacts/
+Config/
+Analyzer/
+Scratch/
+build/

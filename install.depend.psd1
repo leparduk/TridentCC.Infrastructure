@@ -14,7 +14,10 @@
     ModuleBuilder    = 'Latest'
     PowerShellGet    = 'Latest'
     PSScriptAnalyzer = 'Latest'
-    PSQualityCheck   = 'Latest'
+    PSQualityCheck   = @{
+        Name    = 'PSQualityCheck'
+        Version = '2.0.0'
+    }
     InvokeBuild      = 'Latest'
     "Cofl.Util"      = 'Latest'
 }
