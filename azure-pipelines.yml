@@ -21,10 +21,10 @@ steps:
   inputs:
     filePath: '.\install-depend.ps1'
     pwsh: true
-    workingDirectory: '%(System.DefaultWorkingDirectory)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
 
 - task: PowerShell@2
   inputs:
     filePath: '.\build.ps1'
     pwsh: true
-    workingDirectory: '%(System.DefaultWorkingDirectory)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
