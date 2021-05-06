@@ -20,6 +20,6 @@ $invokePSDependParams = @{
     Import  = $true
     Confirm = $false
     Install = $true
-    Verbose = $true
+    Verbose = $false
 }
 Invoke-PSDepend @invokePSDependParams
